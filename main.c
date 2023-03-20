@@ -25,7 +25,13 @@ int field[M][N];
 int x = N / 2;
 int y = M / 2;
 int score = 0;
-int tailArr[M][N];
+
+struct nodeTail
+{
+	int x;
+	int y;
+};
+
 
 int flag = 0;
 int gameOver = 0;
@@ -41,13 +47,16 @@ void resetScreen();
 void input();
 void logic();
 void spawnFood();
-void updateTail();
+void updateTail(struct nodeTail* a);
 
 int main()
 {
+	int n = 0;
+	struct nodeTail* ptr = (struct nodeTail*)malloc(sizeof(struct nodeTail));
 	srand(time(NULL));
 	system("cls");
 	initialization();
+	
 	while(!gameOver)
 	{
 		spawnFood();
@@ -55,9 +64,19 @@ int main()
 		logic();
 		initialization();
 		resetScreen();
+	
+		(ptr + n)->x = x;
+		(ptr + n)->y = y;
+		n++;
+		if(n >= score - 1)
+		{
+			n = 0;
+		}
+		updateTail(ptr);
 	}
 	system("cls");
-	//printf("%d %d", foodX, foodY);
+	free(ptr);
+	exit(0);
 	return 0;
 }
 
@@ -94,7 +113,7 @@ void displayScene()
 		printf("\n");
 	}
 	printf("  score = %d\n", score);
-	printf("\n Press Q to quit.\n W - up\n S - down\n A - left\n D - right");
+	printf(" W - up\n S - down\n A - left\n D - right");
 }
 
 void initialization()
@@ -121,18 +140,7 @@ void initialization()
 			}
 		}
 	}
-	//for(i = 0; i < M; ++i)
-	//{
-	//	for(j = 0; j < N; ++j)
-	//	{
-	//		if(tailArr[i][j] == 1)
-	//		{
-	//			field[i][j] = tailValue;
-	//		}
-	//	}
-	//}
 
-	//field[foodY][foodX] = foodValue;
 	field[y][x] = headValue;
 }
 
@@ -164,9 +172,6 @@ void input()
 		case 'w':
 			flag = 4;
 			break;
-		case 'q':
-			gameOver = 1;
-			break;
 		}
 	}
 }
@@ -193,7 +198,6 @@ void logic()
 		break;
 	}
 
-	//tailArr[y][x] = 1;
 
 	if(x <= 0 || x >= N - 1 || y <= 0 || y >= M - 1)
 	{
@@ -218,7 +222,10 @@ void spawnFood()
 	isThereFood = 1;
 }
 
-void updateTail()
+void updateTail(struct nodeTail* a)
 {
-	
+	for(int i = 0; i < score - 2; ++i)
+	{
+		field[(a + i)->y][(a + i)->x] = tailValue;
+	}
 }
