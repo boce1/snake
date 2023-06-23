@@ -220,10 +220,14 @@ void spawnFood(int field[HEIGHT][WIDTH])
     int foodX, foodY;
     if(isThereFood == 0)
     {   
-        food.x = 1 + rand() % (WIDTH - 2);
-        food.y = 1 + rand() % (HEIGHT - 2);
+        do
+        {
+            food.x = 1 + rand() % (WIDTH - 2);
+            food.y = 1 + rand() % (HEIGHT - 2);
+        }while(field[food.y][food.x] == TAIL);
         isThereFood = 1;
     }
+
     field[food.y][food.x] = FOOD;
 }
 
