@@ -1,152 +1,144 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
 #include <conio.h>
+#include <windows.h>
 #include <unistd.h>
 #include <time.h>
 
-#define N 40
-#define M 20
+#define WIDTH 40
+#define HEIGHT 20
 
-int i, j;
+#define EMPTY 0
+#define BORDER 1
+#define TAIL 2
+#define FOOD 3
 
-char border = '#';
-char head = 'O';
-char tail = 'o';
-char empty = ' ';
-char food = '$';
-int borderValue = 0;
-int headValue = 5;
-int tailValue = 4;
-int emptyValue = 1;
-int foodValue = 2;
+typedef struct node
+{
+    int x;
+    int y;
+} node;
 
-int field[M][N];
-int x = N / 2;
-int y = M / 2;
+int gameOver = 0;
+int isThereFood = 0;
 int score = 0;
 
-struct nodeTail
-{
-	int x;
-	int y;
-};
-
-
-int flag = 0;
-int gameOver = 0;
-
-int foodX = -1;
-int foodY = -1;
-int isThereFood = 0;
-
-void displayScene();
-void initialization();
-void displayPoint();
+node food;
+void displayScene(int field[HEIGHT][WIDTH]);
+void initialazingGrid(int field[HEIGHT][WIDTH]);
 void resetScreen();
-void input();
-void logic();
-void spawnFood();
-void updateTail(struct nodeTail* a);
+void inputFlag(int field[HEIGHT][WIDTH], node* tail, const int usedSize, const int flag);
+void inputKyeabord();
+void snakeGrid(int field[HEIGHT][WIDTH], node* tail, const int usedSize);
+void spawnFood(int field[HEIGHT][WIDTH]);
+void updateSnake(node* snake, int* usedSize, int* size);
 
 int main()
 {
-	int n = 0;
-	struct nodeTail* ptr = (struct nodeTail*)malloc(sizeof(struct nodeTail));
-	srand(time(NULL));
-	system("cls");
-	initialization();
-	
-	while(!gameOver)
-	{
-		spawnFood();
-		displayScene();
-		logic();
-		initialization();
-		resetScreen();
-	
-		(ptr + n)->x = x;
-		(ptr + n)->y = y;
-		n++;
-		if(n >= score - 1)
-		{
-			n = 0;
-		}
-		updateTail(ptr);
-	}
-	system("cls");
-	free(ptr);
-	exit(0);
-	return 0;
+    srand(time(NULL));
+
+    int grid[HEIGHT][WIDTH];
+    initialazingGrid(grid);
+
+    // INITIALIZING SNAKE
+    node head = {WIDTH / 2, HEIGHT / 2};
+    int size = 18*18;
+    int usedSize = 1;
+    //node* snake = (node*)malloc(size * sizeof(node));
+    node snake[size];
+    snake[0] = head;
+    // ---------- //
+
+    int flag;
+    //int gameOver = 0;
+    //int isThereFood = 0;
+    system("cls");
+    while(gameOver == 0)
+    {   
+        displayScene(grid);
+        resetScreen();
+        inputKyeabord(&flag);
+        //snakeGrid(grid, snake, usedSize);
+        inputFlag(grid, snake, usedSize, flag);
+        updateSnake(snake, &usedSize, &size);
+        //printf("%d", flag);
+    }
+    system("cls");
+    printf("================Game Over!================\n");
+    //int i;
+    //for(i = 0; i < usedSize; i++)
+    //{
+    //    printf("[%d %d] ", snake[i].x, snake[i].y);
+    //}
+    free(snake);
+    return 0;
 }
 
-void displayPoint()
+void displayScene(int field[HEIGHT][WIDTH])
 {
-	if(field[i][j] == borderValue)
-	{
-		printf("%c", border);
-	}else if(field[i][j] == emptyValue)
-	{
-		printf("%c", empty);
-	}else if(field[i][j] == headValue)
-	{
-		printf("%c", head);
-	}else if(field[i][j] == tailValue)
-	{
-		printf("%c", tail);
-	}else if(field[i][j] == foodValue)
-	{
-		printf("%c", food);
-	}
-}
+    int i, j;
+    for(i = 0; i < HEIGHT; i++)
+    {
+        for(j = 0; j < WIDTH; j++)
+        {
+            switch(field[i][j])
+            {
+                case EMPTY:
+                    printf(" ");
+                    break;
+                case BORDER:
+                    printf("#");
+                    break; 
+                case TAIL:
+                    printf("O");
+                    break;
+                case FOOD:
+                    printf("&");
+                    break; 
+                default:
+                    printf("Wrong value in grid\n");
+                    break;             
+            } 
+        }
+        printf("\n");
+    }
 
-void displayScene()
-{
-	for(i = 0; i < M; ++i)
-	{
-		printf("  ");
-		for(j = 0; j < N; j++)
-		{
-			displayPoint();
-			input();
-		}
-		printf("\n");
-	}
-	printf("  score = %d\n", score);
+    printf("  score = %d\n", score + 1);
 	printf(" W - up\n S - down\n A - left\n D - right");
 }
 
-void initialization()
-{
-	for(i = 0; i < M; ++i)
-	{
-		for(j = 0; j < N; ++j)
-		{
-			if(i == 0 || i == M - 1) // first and last row
-			{
-				field[i][j] = 0;
-			}else // other rows
-			{
-				if(j == 0 || j == N - 1) // first and last column
-				{
-					field[i][j] = 0;
-				}else
-				{
-					if(foodX != j || foodY != i)
-					{
-						field[i][j] = 1;
-					}
-				}
-			}
-		}
-	}
+void initialazingGrid(int field[HEIGHT][WIDTH])
+{   
 
-	field[y][x] = headValue;
+    int i, j;
+    for(i = 0; i < WIDTH; i++)
+    {
+        field[0][i] = BORDER;
+    }
+
+    for(i = 1; i < HEIGHT - 1; i++)
+    {
+        for(j = 0; j < WIDTH; j++)
+        {
+            if(j == 0 || j == WIDTH - 1)
+            {
+                field[i][j] = BORDER;
+            }else
+            {
+                field[i][j] = EMPTY;
+            }
+        }
+    }
+    
+    for(i = 0; i < WIDTH; i++)
+    {
+        field[HEIGHT - 1][i] = BORDER;
+    }
 }
 
 void resetScreen()
 {
-	HANDLE hOut;
+    HANDLE hOut;
 	COORD Position;
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	Position.X = 0;
@@ -154,78 +146,162 @@ void resetScreen()
 	SetConsoleCursorPosition(hOut, Position);
 }
 
-void input()
+void inputFlag(int field[HEIGHT][WIDTH], node* tail, const int usedSize, const int flag)
+{
+	double frame = 0.01;
+	sleep(frame);
+
+    node head = tail[0];
+	switch(flag)
+	{
+	    case 1:
+	    	--head.x;
+	    	break;
+	    case 2:
+	    	++head.y;
+	    	break;
+	    case 3:
+	    	++head.x;
+	    	break;
+	    case 4:
+	    	--head.y;
+	    	break;
+	    default:
+	    	break;
+	}
+	if(head.x <= 0 || head.x >= WIDTH - 1 || head.y <= 0 || head.y >= HEIGHT - 1)
+	{
+		gameOver = 1;
+	}
+    tail[0] = head;
+
+    initialazingGrid(field);
+    snakeGrid(field, tail, usedSize);
+    spawnFood(field);
+}
+
+void inputKyeabord(int* flag)
 {
 	if(kbhit())
 	{
 		switch(getch())
 		{
-		case 'a':
-			flag = 1;
-			break;
-		case 's':
-			flag = 2;
-			break;
-		case 'd':
-			flag = 3;
-			break;
-		case 'w':
-			flag = 4;
-			break;
+		    case 'a':
+		    	*flag = 1;
+		    	break;
+		    case 's':
+		    	*flag = 2;
+		    	break;
+		    case 'd':
+		    	*flag = 3;
+		    	break;
+		    case 'w':
+		    	*flag = 4;
+		    	break;
+            default:
+                break;
 		}
 	}
 }
 
-void logic()
+void snakeGrid(int field[HEIGHT][WIDTH], node* tail, const int usedSize)
 {
-	double frame = 0.01;
-	sleep(frame);
-	switch(flag)
-	{
-	case 1:
-		--x;
-		break;
-	case 2:
-		++y;
-		break;
-	case 3:
-		++x;
-		break;
-	case 4:
-		--y;
-		break;
-	default:
-		break;
-	}
-
-
-	if(x <= 0 || x >= N - 1 || y <= 0 || y >= M - 1)
-	{
-		gameOver = 1;
-	}
-
-	if(x == foodX && y == foodY)
-	{
-		isThereFood = 0;
-		++score;
-	}
+    int i;
+    int x, y;
+    for(i = 0; i < usedSize; i++)
+    {  
+        x = tail[i].x;
+        y = tail[i].y;
+        field[y][x] = TAIL;
+    }
 }
 
-void spawnFood()
+void spawnFood(int field[HEIGHT][WIDTH])
 {
-	if(isThereFood == 0)
-	{
-		foodX = 1 + rand() % (N - 2);
-		foodY = 1 + rand() % (M - 2);
-		field[foodY][foodX] = foodValue;
-	}
-	isThereFood = 1;
+    int foodX, foodY;
+    if(isThereFood == 0)
+    {   
+        food.x = 1 + rand() % (WIDTH - 2);
+        food.y = 1 + rand() % (HEIGHT - 2);
+        isThereFood = 1;
+    }
+    field[food.y][food.x] = FOOD;
 }
 
-void updateTail(struct nodeTail* a)
+void updateSnake(node* snake, int* usedSize, int* size) // treba da popravim ovoa
 {
-	for(int i = 0; i < score - 2; ++i)
-	{
-		field[(a + i)->y][(a + i)->x] = tailValue;
-	}
+    int i, j;
+    //node* oldTail = (node*)malloc((*usedSize) * sizeof(node));
+    //node oldTail[(*usedSize)];
+    //for(i = 0; i < (*usedSize); i++)
+    //{
+    //    oldTail[i] = snake[i];
+    //}
+
+
+
+    //if(snake[0].x == food.x && snake[0].y == food.y)
+    //{
+    //    score++;
+    //    isThereFood = 0;
+    //    if(*usedSize >= *size)
+    //    {
+    //        node* temp = (node*)realloc(snake, ((*size) + 3) * sizeof(node));
+    //        if(temp == NULL)
+    //        {
+    //            gameOver = 1;
+    //            //system("cls");
+    //            //printf("Something went wrong");
+    //            //exit(1);
+    //        }else
+    //        {
+    //            snake = temp;
+    //            (*size) += 3;
+    //            //snake[*usedSize].x = food.x;
+    //            //snake[*usedSize].y = food.y;
+    //            //gameOver = 1;
+    //            //printf("%p %p\n", oldTail, snake);
+    //            printf("%d %d\n", *usedSize, *size);
+//
+    //        }
+    //    }
+    //    (*usedSize)++;
+    //}
+    //int i;
+
+    //for(i = 0; i < *usedSize - 1; i++)
+    //{
+    //    printf("[%d %d] ", oldTail[i].x, oldTail[i].y);
+    //}
+//
+    //    
+    //for(i = 1; i < *usedSize; i++)
+    //{
+    //    snake[i] = oldTail[i - 1];
+    //}
+//
+//
+    //printf("\n");
+    //for(i = 0; i < *usedSize; i++)
+    //{
+    //    printf("[%d %d] ", snake[i].x, snake[i].y);
+    //}
+
+    node oldTail[(*usedSize)];
+    for(i = 0; i < (*usedSize); i++)
+    {
+        oldTail[i] = snake[i];
+    }
+
+    if(snake[0].x == food.x && snake[0].y == food.y)
+    {
+        score++;
+        isThereFood = 0;
+        (*usedSize)++;
+    }
+
+    for(i = 1; i < *usedSize; i++)
+    {
+        snake[i] = oldTail[i - 1];
+    }
 }
