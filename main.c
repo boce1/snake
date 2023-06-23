@@ -64,10 +64,10 @@ int main()
     system("cls");
     if(usedSize >= size)
     {
-        printf("================You Won!================\n"); 
+        printf("\n\n================You Won!================\n"); 
     }else
     {
-        printf("================Game Over!================\n");
+        printf("\n\n================Game Over!================\n");
     }
 
     return 0;
@@ -78,6 +78,7 @@ void displayScene(int field[HEIGHT][WIDTH])
     int i, j;
     for(i = 0; i < HEIGHT; i++)
     {
+        printf("\t");
         for(j = 0; j < WIDTH; j++)
         {
             switch(field[i][j])
@@ -102,8 +103,8 @@ void displayScene(int field[HEIGHT][WIDTH])
         printf("\n");
     }
 
-    printf("  score = %d\n", score + 1);
-	printf(" W - up\n S - down\n A - left\n D - right");
+    printf("\t\t\tscore = %d\n", score + 1);
+	printf("\n\n\t\t\tW - up\n\t\t\tS - down\n\t\t\tA - left\n\t\t\tD - right\n\t\t\tQ - quit");
 }
 
 void initialazingGrid(int field[HEIGHT][WIDTH])
@@ -147,7 +148,7 @@ void resetScreen()
 
 void inputFlag(int field[HEIGHT][WIDTH], node* tail, const int usedSize, const int flag)
 {
-	double frame = 0.01;
+	double frame = 0.75;
 	sleep(frame);
 
     node head = tail[0];
@@ -165,6 +166,8 @@ void inputFlag(int field[HEIGHT][WIDTH], node* tail, const int usedSize, const i
 	    case 4:
 	    	--head.y;
 	    	break;
+        case 5:
+            gameOver = 1;
 	    default:
 	    	break;
 	}
@@ -197,6 +200,8 @@ void inputKyeabord(int* flag)
 		    case 'w':
 		    	*flag = 4;
 		    	break;
+            case 'q':
+                *flag = 5;
             default:
                 break;
 		}
