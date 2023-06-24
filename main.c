@@ -103,7 +103,7 @@ void displayScene(int field[HEIGHT][WIDTH])
         printf("\n");
     }
 
-    printf("\t\t\tscore = %d\n", score + 1);
+    printf("\t\t\tscore = %d\n", score);
 	printf("\n\n\t\t\tW - up\n\t\t\tS - down\n\t\t\tA - left\n\t\t\tD - right\n\t\t\tQ - quit");
 }
 
